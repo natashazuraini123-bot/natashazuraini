@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kedah Paddy Growth Dynamics & Calculus Simulator</title>
+    <!-- Tailwind CSS for modern utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for plotting interactive curves -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts for premium clean typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons for clean aesthetic iconography -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .math-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- NAVIGATION / HEADER -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i data-lucide="sprout" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Malaysian Agrobiology & Food Security</span>
+                    <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">Kedah Paddy Growth Dynamics</h1>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center">
+                <span class="px-3 py-1 bg-slate-800 text-slate-300 text-xs font-semibold rounded-full border border-slate-700 flex items-center gap-1.5">
+                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-400"></i> SFM: Food Security
+                </span>
+                <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                    <i data-lucide="calculator" class="w-3.5 h-3.5"></i> $f'(t)$ Calculus Lab
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT PANEL: CONTROLS & CALCULUS EXPLANATION -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- CONTROLS & PARAMETERS -->
+            <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-5">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-emerald-400"></i> Simulation Parameters
+                    </h2>
+                    <button id="reset-btn" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+                    </button>
+                </div>
+                
+                <p class="text-xs text-slate-400">
+                    Modify parameters representing Malaysian rice varieties (e.g., high-yielding MR297) and Kedah soil conditions.
+                </p>
+
+                <hr class="border-slate-800/80">
+
+                <!-- SLIDER 1: Max Biomass (L) -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-medium text-slate-300 flex items-center gap-1">
+                            Max Biomass ($L$)
+                            <span class="text-[10px] bg-slate-800 text-slate-400 px-1 rounded">Carrying Capacity</span>
+                        </span>
+                        <span id="val-L" class="font-bold text-emerald-400 math-font">180 g/plant</span>
+                    </div>
+                    <input type="range" id="param-L" min="100" max="250" value="180" step="5"
+                           class="w-full accent-emerald-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Represents final dry plant mass at maturation (harvest size limit).</span>
+                </div>
+
+                <!-- SLIDER 2: Growth Rate Coefficient (k) -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-medium text-slate-300 flex items-center gap-1">
+                            Growth Constant ($k$)
+                            <span class="text-[10px] bg-slate-800 text-slate-400 px-1 rounded">Growth Speed</span>
+                        </span>
+                        <span id="val-k" class="font-bold text-emerald-400 math-font">0.080 /day</span>
+                    </div>
+                    <input type="range" id="param-k" min="0.04" max="0.15" value="0.08" step="0.005"
+                           class="w-full accent-emerald-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Influenced by temperature, sunlight, water, and baseline fertility.</span>
+                </div>
+
+                <!-- SLIDER 3: Inflection Point (t0) -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-medium text-slate-300 flex items-center gap-1">
+                            Inflection Point ($t_0$)
+                            <span class="text-[10px] bg-slate-800 text-slate-400 px-1 rounded">Peak Growth Day</span>
+                        </span>
+                        <span id="val-t0" class="font-bold text-emerald-400 math-font">50 DAT</span>
+                    </div>
+                    <input type="range" id="param-t0" min="30" max="70" value="50" step="1"
+                           class="w-full accent-emerald-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Days After Transplanting (DAT) where maximum growth speed occurs.</span>
+                </div>
+            </div>
+
+            <!-- LIVE GROWTH PADDY ANIMATION -->
+            <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-4 relative overflow-hidden">
+                <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i> Visual Crop Status
+                </h3>
+                
+                <div class="h-32 w-full bg-slate-900/80 rounded-xl relative flex items-end justify-center overflow-hidden border border-slate-800">
+                    <!-- Ground/Soil Level -->
+                    <div class="absolute bottom-0 w-full h-5 bg-gradient-to-t from-emerald-950/80 to-slate-950 border-t border-emerald-900/50"></div>
+                    
+                    <!-- Water Layer (for Wetland Paddy) -->
+                    <div class="absolute bottom-4 w-full h-3 bg-cyan-500/10 border-t border-cyan-400/20 backdrop-blur-[1px]"></div>
+
+                    <!-- Dynamic Paddy Plant SVG (Grows with active slider value) -->
+                    <div id="paddy-graphic-container" class="z-10 transition-all duration-300 transform origin-bottom flex items-end justify-center">
+                        <svg id="paddy-svg" class="w-24 h-24 text-emerald-400" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Stems and leaves that dynamically respond to current day height scale -->
+                            <path id="leaf-left" d="M50,90 C40,70 30,60 25,45 C20,30 35,40 48,75" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                            <path id="leaf-right" d="M50,90 C60,70 70,60 75,45 C80,30 65,40 52,75" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                            <path id="leaf-center" d="M50,90 C50,60 45,40 50,15 C55,40 50,60 50,90" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                            <path id="leaf-far-left" d="M50,90 C35,80 20,75 10,65 C5,60 25,65 46,80" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path id="leaf-far-right" d="M50,90 C65,80 80,75 90,65 C95,60 75,65 54,80" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <!-- Grain panicles (only visible in mature stages) -->
+                            <g id="panicles" class="opacity-0 transition-opacity duration-300 text-yellow-500">
+                                <circle cx="50" cy="12" r="2.5" fill="currentColor"/>
+                                <circle cx="47" cy="18" r="2" fill="currentColor"/>
+                                <circle cx="53" cy="22" r="2" fill="currentColor"/>
+                                <circle cx="45" cy="28" r="1.5" fill="currentColor"/>
+                                <circle cx="55" cy="32" r="1.5" fill="currentColor"/>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- Ambient Grid Elements -->
+                    <div class="absolute inset-0 grid grid-cols-4 pointer-events-none opacity-10">
+                        <div class="border-r border-slate-700 h-full"></div>
+                        <div class="border-r border-slate-700 h-full"></div>
+                        <div class="border-r border-slate-700 h-full"></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Paddy Growth Stage:</span>
+                    <span id="paddy-stage-badge" class="font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                        Seedling (DAT 0)
+                    </span>
+                </div>
+            </div>
+
+            <!-- CALCULUS / DERIVATIVES CORNER -->
+            <div class="bg-gradient-to-br from-slate-950 to-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-4">
+                <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="calculator" class="w-4.5 h-4.5 text-emerald-400"></i> Bioscience Derivative Formula
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Crop accumulation follows a <strong>logistic model</strong>. The first derivative $f'(t)$ is critical for agronomists, representing the <strong>instantaneous vegetative biomass acceleration rate</strong>.
+                </p>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 flex flex-col gap-3">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-emerald-400 tracking-wider font-semibold uppercase">Cumulative Biomass Function $f(t)$</span>
+                        <div class="math-font text-sm text-slate-200 font-medium">
+                            f(t) = L / (1 + e<sup>-k(t - t₀)</sup>)
+                        </div>
+                    </div>
+                    <hr class="border-slate-800/60">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-amber-400 tracking-wider font-semibold uppercase">Growth Rate (First Derivative) $f'(t)$</span>
+                        <div class="math-font text-sm text-slate-200 font-medium">
+                            f'(t) = k · f(t) · [1 - (f(t) / L)]
+                        </div>
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-500 flex items-start gap-1.5 leading-normal">
+                    <i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5"></i>
+                    <span>Notice that the derivative reaches its absolute maximum when $f(t) = L/2$. This inflection point marks the peak nutrient demand.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: SIMULATION DASHBOARD, GRAPHS & INSIGHTS -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- MASTER CONTROLLER CARD -->
+            <div class="bg-slate-950/80 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row items-center gap-6">
+                <!-- Playback / Timeline Control -->
+                <div class="flex flex-col gap-3 w-full md:w-2/3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                            <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+                            <span>Crop Growth Timeline</span>
+                        </div>
+                        <span id="active-day-label" class="text-sm font-bold text-white tracking-wider math-font bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+                            Day 0 / 120 (DAT)
+                        </span>
+                    </div>
+
+                    <!-- Time Scrubber Slider -->
+                    <input type="range" id="time-scrubber" min="0" max="120" value="0" step="1"
+                           class="w-full accent-emerald-400 h-2 bg-slate-800 rounded-lg cursor-pointer">
+
+                    <!-- Control Buttons -->
+                    <div class="flex items-center gap-2">
+                        <button id="play-btn" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/10">
+                            <i data-lucide="play" class="w-4 h-4 fill-current"></i> Play Season
+                        </button>
+                        <button id="pause-btn" class="bg-slate-800 hover:bg-slate-700 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all border border-slate-700">
+                            <i data-lucide="pause" class="w-4 h-4"></i> Pause
+                        </button>
+                        <button id="reset-time-btn" class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all border border-slate-800">
+                            <i data-lucide="skip-back" class="w-4 h-4"></i> Reset
+                        </button>
+                        
+                        <!-- Speed Control -->
+                        <select id="speed-control" class="ml-auto bg-slate-900 text-slate-300 text-xs border border-slate-800 rounded-xl px-2.5 py-2 focus:ring-1 focus:ring-emerald-500 outline-none">
+                            <option value="1">1x Speed</option>
+                            <option value="2" selected>2x Speed</option>
+                            <option value="4">4x Speed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Live Analytical Output Display -->
+                <div class="grid grid-cols-2 gap-4 w-full md:w-1/3 p-4 bg-slate-900/60 rounded-xl border border-slate-800/80">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Dry Biomass f(t)</span>
+                        <span id="stat-biomass" class="text-xl font-extrabold text-emerald-400 math-font mt-1">1.2 g</span>
+                        <span class="text-[9px] text-slate-500">per plant</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Growth Rate f'(t)</span>
+                        <span id="stat-derivative" class="text-xl font-extrabold text-amber-400 math-font mt-1">0.1 g/day</span>
+                        <span class="text-[9px] text-slate-500">instantaneous</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHARTS CONTAINER -->
+            <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- CHART 1: Primary Function (Biomass) -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span>
+                            Cumulative Dry Biomass $f(t)$
+                        </h4>
+                        <span class="text-[10px] text-slate-500">g/plant vs DAT</span>
+                    </div>
+                    <div class="h-64 relative bg-slate-900/40 p-2 rounded-xl border border-slate-900">
+                        <canvas id="chart-biomass"></canvas>
+                    </div>
+                </div>
+
+                <!-- CHART 2: Derivative (Growth Rate) -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 bg-amber-500 rounded-full inline-block"></span>
+                            Daily Growth Rate $f'(t)$ (First Derivative)
+                        </h4>
+                        <span class="text-[10px] text-slate-500">g/plant/day vs DAT</span>
+                    </div>
+                    <div class="h-64 relative bg-slate-900/40 p-2 rounded-xl border border-slate-900">
+                        <canvas id="chart-growth-rate"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REAL-TIME MALAYSIAN BIOSCIENCE ADVISOR -->
+            <div id="advisor-card" class="bg-gradient-to-r from-emerald-950/20 to-teal-950/10 p-6 rounded-2xl border border-emerald-500/20 shadow-xl flex items-start gap-4">
+                <div id="advisor-icon" class="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 shrink-0 mt-0.5 animate-pulse">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Smart Agrotech Advisory</span>
+                        <span id="advisor-phase-badge" class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full">Vegetative Phase</span>
+                    </div>
+                    <h4 id="advisor-title" class="text-base font-bold text-white">Critical Nitrogen Top-Dressing Window Imminent</h4>
+                    <p id="advisor-text" class="text-xs text-slate-300 leading-relaxed">
+                        Currently at DAT 45. The derivative f'(t) is accelerating dramatically (f''(t) > 0). The plant's nutritional demand is rising to its seasonal peak. Apply top-dressing fertilizer now to achieve optimal yields for regional food security!
+                    </p>
+                </div>
+            </div>
+
+            <!-- MALAYSIAN FOOD SECURITY BRIEF -->
+            <div class="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 shadow-xl grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex flex-col gap-2">
+                    <div class="text-emerald-400"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                    <h4 class="text-sm font-bold text-white">Rice Self-Sufficiency (SSL)</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Malaysia targets a 100% Self-Sufficiency Level (SSL) for paddy, currently sitting around 65-70%. Precision agricultural modeling using logistic derivatives helps farmers boost yield-per-hectare to match domestic food demand.
+                    </p>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <div class="text-emerald-400"><i data-lucide="leaf" class="w-6 h-6"></i></div>
+                    <h4 class="text-sm font-bold text-white">Sustainable Nitrogen Use</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Excess Nitrogen leaching causes severe eutrophication in Kedah's rivers. Applying fertilizer during peak $f'(t)$ ensures near-complete plant uptake, reducing environmental pollution while minimizing input costs.
+                    </p>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <div class="text-emerald-400"><i data-lucide="cpu" class="w-6 h-6"></i></div>
+                    <h4 class="text-sm font-bold text-white">Smart Farming Integration</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Combining remote sensing (NDVI indices) with local calculus models allows automated drone-spraying systems to match localized derivative spikes, targeting resource-scarce zones in massive paddy schemes like MADA.
+                    </p>
+                </div>
+            </div>
+            
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2026 Malaysia Agrobiology Mathematical Modeling Tool. Developed for Bioscience Education.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-slate-300 transition-colors">Documentation</a>
+                <a href="#" class="hover:text-slate-300 transition-colors">MADA Yield Reports</a>
+                <a href="#" class="hover:text-slate-300 transition-colors">Food Security Strategy 2030</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MATHEMATICS AND CHARTING INTERACTIVE JS -->
+    <script>
+        // --- CONSTANTS & GLOBAL INITIALIZATIONS ---
+        const DAYS_LIMIT = 120;
+        let L = 180;        // Max dry biomass limit (g/plant)
+        let k = 0.08;       // Growth rate constant
+        let t0 = 50;        // Inflection point DAT
+        
+        let activeDay = 0;  // Timeline playhead (DAT)
+        let playInterval = null;
+        let playSpeed = 2;  // Speed multiplier
+
+        // Math Logistic Growth Function f(t)
+        function f(t, L, k, t0) {
+            return L / (1 + Math.exp(-k * (t - t0)));
+        }
+
+        // Analytical Derivative f'(t)
+        function fPrime(t, L, k, t0) {
+            const currentF = f(t, L, k, t0);
+            return k * currentF * (1 - (currentF / L));
+        }
+
+        // Second Derivative f''(t) to calculate inflection/concavity states
+        function fDoublePrime(t, L, k, t0) {
+            const currentF = f(t, L, k, t0);
+            return k * fPrime(t, L, k, t0) * (1 - (2 * currentF) / L);
+        }
+
+        // --- CHART DATA GENERATION ---
+        function generateData() {
+            const labels = [];
+            const biomassData = [];
+            const growthRateData = [];
+
+            for (let t = 0; t <= DAYS_LIMIT; t++) {
+                labels.push(t);
+                biomassData.push(f(t, L, k, t0));
+                growthRateData.push(fPrime(t, L, k, t0));
+            }
+
+            return { labels, biomassData, growthRateData };
+        }
+
+        // --- CHARTS CONFIGURATION ---
+        const dataSet = generateData();
+
+        // Chart 1: Biomass Canvas Setup
+        const ctxBiomass = document.getElementById('chart-biomass').getContext('2d');
+        const chartBiomass = new Chart(ctxBiomass, {
+            type: 'line',
+            data: {
+                labels: dataSet.labels,
+                datasets: [
+                    {
+                        label: 'Dry Biomass f(t)',
+                        data: dataSet.biomassData,
+                        borderColor: '#10b981', // Tailwind Emerald-500
+                        borderWidth: 3,
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Current Position',
+                        data: [], // Populated dynamically
+                        backgroundColor: '#ffffff',
+                        borderColor: '#10b981',
+                        borderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        showLine: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(51, 65, 85, 0.15)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } },
+                        title: { display: true, text: 'Days After Transplanting (DAT)', color: '#64748b', font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(51, 65, 85, 0.15)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } },
+                        title: { display: true, text: 'Biomass (g / plant)', color: '#64748b', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Growth Rate Canvas Setup
+        const ctxGrowthRate = document.getElementById('chart-growth-rate').getContext('2d');
+        const chartGrowthRate = new Chart(ctxGrowthRate, {
+            type: 'line',
+            data: {
+                labels: dataSet.labels,
+                datasets: [
+                    {
+                        label: "Growth Rate f'(t)",
+                        data: dataSet.growthRateData,
+                        borderColor: '#f59e0b', // Tailwind Amber-500
+                        borderWidth: 3,
+                        backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Current Position',
+                        data: [], // Populated dynamically
+                        backgroundColor: '#ffffff',
+                        borderColor: '#f59e0b',
+                        borderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        showLine: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(51, 65, 85, 0.15)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } },
+                        title: { display: true, text: 'Days After Transplanting (DAT)', color: '#64748b', font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(51, 65, 85, 0.15)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } },
+                        title: { display: true, text: 'Growth Rate (g / day)', color: '#64748b', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // --- REACTIVE RENDERING ENGINE ---
+        function updateDashboard() {
+            // Update labels
+            document.getElementById('active-day-label').innerText = `Day ${activeDay} / ${DAYS_LIMIT} (DAT)`;
+            
+            // Calculate active mathematical values
+            const activeBiomassVal = f(activeDay, L, k, t0);
+            const activeDerivativeVal = fPrime(activeDay, L, k, t0);
+            const activeSecDerivativeVal = fDoublePrime(activeDay, L, k, t0);
+
+            // Update stats board
+            document.getElementById('stat-biomass').innerText = `${activeBiomassVal.toFixed(1)} g`;
+            document.getElementById('stat-derivative').innerText = `${activeDerivativeVal.toFixed(2)} g/day`;
+
+            // Update highlighted position dots on Charts
+            chartBiomass.data.datasets[1].data = [{ x: activeDay, y: activeBiomassVal }];
+            chartGrowthRate.data.datasets[1].data = [{ x: activeDay, y: activeDerivativeVal }];
+            chartBiomass.update('none'); // Update without full layout animation to keep it smooth
+            chartGrowthRate.update('none');
+
+            // --- ANIMATE THE INTEGRATED PADDY PLANT SVG ---
+            // Scaled scaling based on biomass ratio
+            const heightScale = 0.2 + (activeBiomassVal / L) * 0.8;
+            const widthScale = 0.4 + (activeBiomassVal / L) * 0.6;
+            
+            const paddyGraphic = document.getElementById('paddy-graphic-container');
+            paddyGraphic.style.transform = `scale(${widthScale}, ${heightScale})`;
+
+            // Color maturation of stems & leaves from green to golden-yellow
+            const progress = activeBiomassVal / L;
+            const paddySvg = document.getElementById('paddy-svg');
+            
+            // Linear color interpolation
+            let color;
+            if (progress < 0.6) {
+                color = '#10b981'; // Fresh Green
+            } else if (progress < 0.85) {
+                color = '#a3e635'; // Lime Green-Yellow
+            } else {
+                color = '#eab308'; // Golden Yellow
+            }
+            paddySvg.style.color = color;
+
+            // Panicles visibility threshold
+            const panicles = document.getElementById('panicles');
+            if (activeDay > 80) {
+                panicles.classList.remove('opacity-0');
+                panicles.classList.add('opacity-100');
+            } else {
+                panicles.classList.remove('opacity-100');
+                panicles.classList.add('opacity-0');
+            }
+
+            // --- DYNAMIC PHASE & BIOLOGICAL ADVISOR RULES ---
+            let phase = "";
+            let badgeClass = "";
+            let advisorTitle = "";
+            let advisorText = "";
+            let advisorIcon = "";
+            let advisorIconColor = "";
+
+            if (activeDay <= 20) {
+                phase = "Seedling Phase (DAT 0-20)";
+                badgeClass = "bg-teal-500/10 text-teal-400 border-teal-500/20";
+                advisorTitle = "Early Crop Establishment Focus";
+                advisorText = `At Day ${activeDay}, cumulative biomass f(t) is extremely low. Growth acceleration is slow (f'(t) = ${activeDerivativeVal.toFixed(2)}). Maintain thin, stagnant water depth (1-2cm) for root system setup. Only basal fertilizer should be present; standard top-dressing now would wash away without absorption.`;
+                advisorIcon = "droplets";
+                advisorIconColor = "text-teal-400 bg-teal-500/10 border-teal-500/20";
+            } 
+            else if (activeDay > 20 && activeDay <= 40) {
+                phase = "Active Tillering Phase (DAT 21-40)";
+                badgeClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+                advisorTitle = "Vegetative Acceleration Imminent";
+                advisorText = `Growth rate f'(t) is accelerating steadily (${activeDerivativeVal.toFixed(2)} g/plant/day) as concavity is upwards (f''(t) > 0). The vegetative expansion has begun. Maintain adequate irrigation and monitor for early pest outbreaks like leaf rollers.`;
+                advisorIcon = "trending-up";
+                advisorIconColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+            }
+            // CRITICAL NITROGEN APP WINDOW: Peak Acceleration / Just before inflection
+            else if (activeDay > 40 && activeDay <= 55) {
+                phase = "Panicle Initiation Phase (DAT 41-55)";
+                badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse";
+                advisorTitle = "CRITICAL NITROGEN APPLICATION WINDOW! 🔥";
+                advisorText = `WARNING: Peak vegetative growth speed f'(t) is occurring around Day ${t0}. Today (Day ${activeDay}), f'(t) is ${activeDerivativeVal.toFixed(2)} g/plant/day. Plant metabolic demand is maximized! Apply urea nitrogen top-dressing immediately. Maximum cellular integration occurs during this peak first derivative window, maximizing fertilizer efficiency.`;
+                advisorIcon = "zap";
+                advisorIconColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+            } 
+            else if (activeDay > 55 && activeDay <= 85) {
+                phase = "Heading & Flowering Phase (DAT 56-85)";
+                badgeClass = "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+                advisorTitle = "De-acceleration Phase (Grain Setting)";
+                advisorText = `Growth velocity f'(t) has crested and is starting to decline as we cross the inflection point. Biomass accumulation is slowing down (f''(t) < 0) as energy is re-allocated from leaf growth to grain creation. Avoid heavy nitrogen fertilizers now to prevent lodging (weak stems collapsing).`;
+                advisorIcon = "flower";
+                advisorIconColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
+            } 
+            else {
+                phase = "Maturation & Ripening Phase (DAT 86-120)";
+                badgeClass = "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+                advisorTitle = "Golden Grain Maturation (L-Limit Reached)";
+                advisorText = `We are hovering near the carrying capacity plateau L (${L}g). The growth speed f'(t) approaches zero (${activeDerivativeVal.toFixed(2)}). The paddy leaves have yellowed, and grain moisture is dropping. Drain fields 10-14 days before harvest to secure firm ground for mechanical combine harvesters.`;
+                advisorIcon = "tractor";
+                advisorIconColor = "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
+            }
+
+            // Render Advisor Updates
+            document.getElementById('paddy-stage-badge').innerText = phase;
+            document.getElementById('paddy-stage-badge').className = `font-bold text-xs px-2.5 py-0.5 rounded-full border ${badgeClass}`;
+            document.getElementById('advisor-phase-badge').innerText = phase;
+            document.getElementById('advisor-phase-badge').className = `text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeClass}`;
+            document.getElementById('advisor-title').innerText = advisorTitle;
+            document.getElementById('advisor-text').innerText = advisorText;
+            
+            const iconDiv = document.getElementById('advisor-icon');
+            iconDiv.className = `p-3 rounded-xl border shrink-0 mt-0.5 ${advisorIconColor}`;
+            iconDiv.innerHTML = `<i data-lucide="${advisorIcon}" class="w-6 h-6"></i>`;
+            
+            // Re-render newly injected lucide icons
+            lucide.createIcons();
+        }
+
+        // --- COMPREHENSIVE PARAMETER & DATA REFRESH ---
+        function handleParamsChange() {
+            L = parseFloat(document.getElementById('param-L').value);
+            k = parseFloat(document.getElementById('param-k').value);
+            t0 = parseInt(document.getElementById('param-t0').value);
+
+            // Update user UI value text labels
+            document.getElementById('val-L').innerText = `${L} g/plant`;
+            document.getElementById('val-k').innerText = `${k.toFixed(3)} /day`;
+            document.getElementById('val-t0').innerText = `${t0} DAT`;
+
+            // Regenerate dataset and update lines
+            const updated = generateData();
+            chartBiomass.data.labels = updated.labels;
+            chartBiomass.data.datasets[0].data = updated.biomassData;
+            chartGrowthRate.data.labels = updated.labels;
+            chartGrowthRate.data.datasets[0].data = updated.growthRateData;
+
+            updateDashboard();
+        }
+
+        // --- TIMELINE PLAYBACK LOOPS ---
+        function playTimeline() {
+            if (playInterval) return; // Prevent double trigger
+            
+            document.getElementById('play-btn').classList.add('opacity-50', 'pointer-events-none');
+            
+            playInterval = setInterval(() => {
+                if (activeDay >= DAYS_LIMIT) {
+                    pauseTimeline();
+                    return;
+                }
+                activeDay++;
+                document.getElementById('time-scrubber').value = activeDay;
+                updateDashboard();
+            }, 300 / playSpeed); // base speed interval adjusted by speed divisor
+        }
+
+        function pauseTimeline() {
+            clearInterval(playInterval);
+            playInterval = null;
+            document.getElementById('play-btn').classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        function resetTimeline() {
+            pauseTimeline();
+            activeDay = 0;
+            document.getElementById('time-scrubber').value = 0;
+            updateDashboard();
+        }
+
+        // --- EVENT LISTENERS REGISTRATION ---
+        
+        // Parameter Sliders
+        document.getElementById('param-L').addEventListener('input', handleParamsChange);
+        document.getElementById('param-k').addEventListener('input', handleParamsChange);
+        document.getElementById('param-t0').addEventListener('input', handleParamsChange);
+
+        // Reset Settings button
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            document.getElementById('param-L').value = 180;
+            document.getElementById('param-k').value = 0.08;
+            document.getElementById('param-t0').value = 50;
+            handleParamsChange();
+        });
+
+        // Playhead Scrubber slider
+        document.getElementById('time-scrubber').addEventListener('input', (e) => {
+            activeDay = parseInt(e.target.value);
+            updateDashboard();
+        });
+
+        // Media controls
+        document.getElementById('play-btn').addEventListener('click', playTimeline);
+        document.getElementById('pause-btn').addEventListener('click', pauseTimeline);
+        document.getElementById('reset-time-btn').addEventListener('click', resetTimeline);
+
+        // Speed drop-down
+        document.getElementById('speed-control').addEventListener('change', (e) => {
+            playSpeed = parseFloat(e.target.value);
+            if (playInterval) {
+                pauseTimeline();
+                playTimeline();
+            }
+        });
+
+        // --- WINDOW LOAD INITIALIZATION ---
+        window.onload = function() {
+            lucide.createIcons();
+            handleParamsChange(); // Pulls slider configurations and populates first UI frame
+        };
+    </script>
+</body>
+</html>
